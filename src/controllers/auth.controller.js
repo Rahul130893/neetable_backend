@@ -1,6 +1,8 @@
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const nodeMailer= require("nodemailer")
 require("dotenv").config();
+
 
 
 //function to create token using jwt
@@ -29,6 +31,21 @@ const register = async (req, res) => {
   }
 };
 
+
+
+//TO send the email id successfull
+const transporter = nodeMailer.createTransport({
+    service:"gmail",
+    auth: {
+        user: "masairahul116@gmail.com",
+        pass: process.env.PASSWORD
+    }
+})
+
+
+
+
+
 const login = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -41,10 +58,28 @@ const login = async (req, res) => {
     //if email exists, check password;
     const match = user.checkPassword(req.body.password);
 
-    // if password doesn't match
+    // if password doesn't match 
     if (!match) {
       return res.status(400).send({ message: "Wrong Email or Password" });
     }
+
+      //sending mail
+      const mailOptions = {
+        from: "masairahul116@gmail.com",
+        to: user.email,
+        subject: "Sending Email using node.js",
+        text: `hi neetable assigment test`,
+      };
+
+      console.log("check", user, process.env.PASSWORD);
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log("Error sending Emmail",error);
+        } else {
+          console.log("Email sent" + info.response);
+        }
+      });
+
 
     // if it matches
     const token = generateToken(user);
